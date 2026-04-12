@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useAppStore } from '../../src/store/useAppStore';
 import {
@@ -30,70 +30,48 @@ export default function Home() {
   const daysUntilLabel = daysUntil <= 0 ? 'Today' : String(daysUntil);
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.greeting}>Your cycle</Text>
+    <View className="flex-1 bg-pink-bg">
+      <ScrollView
+        contentContainerClassName="p-6 pb-28"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text className="text-3xl font-extrabold text-pink-brand mb-7">Your cycle</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Current cycle day</Text>
-          <Text style={styles.cardValue}>{cycleDay}</Text>
+        <View
+          className="bg-white rounded-2xl p-6 mb-4"
+          style={{ shadowColor: '#E91E8C', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 }}
+        >
+          <Text className="text-xs text-gray-400 font-medium mb-1">Current cycle day</Text>
+          <Text className="text-4xl font-extrabold text-gray-800">{cycleDay}</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Days until next period</Text>
-          <Text style={styles.cardValue}>{daysUntilLabel}</Text>
+        <View
+          className="bg-white rounded-2xl p-6 mb-4"
+          style={{ shadowColor: '#E91E8C', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 }}
+        >
+          <Text className="text-xs text-gray-400 font-medium mb-1">Days until next period</Text>
+          <Text className="text-4xl font-extrabold text-gray-800">{daysUntilLabel}</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Next period expected</Text>
-          <Text style={styles.cardValue}>{formatDisplay(toISODate(nextPeriodDate))}</Text>
+        <View
+          className="bg-white rounded-2xl p-6 mb-4"
+          style={{ shadowColor: '#E91E8C', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 }}
+        >
+          <Text className="text-xs text-gray-400 font-medium mb-1">Next period expected</Text>
+          <Text className="text-4xl font-extrabold text-gray-800">
+            {formatDisplay(toISODate(nextPeriodDate))}
+          </Text>
         </View>
       </ScrollView>
 
       <TouchableOpacity
-        style={styles.fab}
+        className="absolute bottom-8 right-6 bg-pink-brand rounded-full px-7 py-4"
+        style={{ shadowColor: '#E91E8C', shadowOpacity: 0.45, shadowRadius: 14, elevation: 10 }}
         onPress={() => router.push(`/log/${toISODate(new Date())}`)}
         activeOpacity={0.85}
       >
-        <Text style={styles.fabText}>+ Log Today</Text>
+        <Text className="text-white font-extrabold text-base">+ Log Today</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF0F5' },
-  scroll: { padding: 24, paddingBottom: 100 },
-  greeting: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: '#E91E8C',
-    marginBottom: 28,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 18,
-    padding: 22,
-    marginBottom: 16,
-    shadowColor: '#E91E8C',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  cardLabel: { fontSize: 13, color: '#AAA', marginBottom: 6, fontWeight: '500' },
-  cardValue: { fontSize: 30, fontWeight: '800', color: '#2D2D2D' },
-  fab: {
-    position: 'absolute',
-    bottom: 32,
-    right: 24,
-    backgroundColor: '#E91E8C',
-    borderRadius: 36,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
-    shadowColor: '#E91E8C',
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 10,
-  },
-  fabText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
-});
