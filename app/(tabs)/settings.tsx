@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Alert,
   Switch,
   ScrollView,
@@ -62,29 +61,29 @@ export default function Settings() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.field}>
-        <Text style={styles.label}>Cycle length (days)</Text>
+    <ScrollView contentContainerClassName="p-6 bg-pink-bg flex-grow">
+      <View className="mb-6">
+        <Text className="text-sm text-gray-500 font-medium mb-2">Cycle length (days)</Text>
         <TextInput
-          style={styles.input}
+          className="border border-pink-border rounded-xl px-4 py-3 text-base bg-white text-gray-800"
           value={cycleLength}
           onChangeText={setCycleLength}
           keyboardType="number-pad"
         />
       </View>
 
-      <View style={styles.field}>
-        <Text style={styles.label}>Period duration (days)</Text>
+      <View className="mb-6">
+        <Text className="text-sm text-gray-500 font-medium mb-2">Period duration (days)</Text>
         <TextInput
-          style={styles.input}
+          className="border border-pink-border rounded-xl px-4 py-3 text-base bg-white text-gray-800"
           value={periodDuration}
           onChangeText={setPeriodDuration}
           keyboardType="number-pad"
         />
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Notifications</Text>
+      <View className="flex-row justify-between items-center mb-6">
+        <Text className="text-sm text-gray-500 font-medium">Notifications</Text>
         <Switch
           value={notificationsEnabled}
           onValueChange={async (value) => {
@@ -107,50 +106,19 @@ export default function Settings() {
         />
       </View>
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveText}>Save Changes</Text>
+      <TouchableOpacity
+        className="bg-pink-brand rounded-2xl py-5 items-center"
+        style={{ shadowColor: '#E91E8C', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 }}
+        onPress={handleSave}
+      >
+        <Text className="text-white text-base font-bold">Save Changes</Text>
       </TouchableOpacity>
 
-      <View style={styles.divider} />
+      <View className="h-px bg-pink-divider my-7" />
 
-      <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-        <Text style={styles.resetText}>Reset All Data</Text>
+      <TouchableOpacity className="items-center py-2" onPress={handleReset}>
+        <Text className="text-red-soft text-sm font-medium">Reset All Data</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#FFF0F5', flexGrow: 1 },
-  field: { marginBottom: 22 },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 22,
-  },
-  label: { fontSize: 14, color: '#666', marginBottom: 8, fontWeight: '500' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E8D0DC',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    backgroundColor: '#FFF',
-    color: '#333',
-  },
-  saveButton: {
-    backgroundColor: '#E91E8C',
-    borderRadius: 14,
-    padding: 18,
-    alignItems: 'center',
-    shadowColor: '#E91E8C',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  saveText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-  divider: { height: 1, backgroundColor: '#F0D8E4', marginVertical: 28 },
-  resetButton: { alignItems: 'center', padding: 8 },
-  resetText: { color: '#E57373', fontSize: 15, fontWeight: '500' },
-});
