@@ -7,9 +7,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Modal,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { useAppStore } from '../src/store/useAppStore';
 import { toISODate } from '../src/utils/date';
@@ -19,7 +18,7 @@ export default function Onboarding() {
   const [cycleLength, setCycleLength] = useState('28');
   const [periodDuration, setPeriodDuration] = useState('5');
   const [lastPeriodStart, setLastPeriodStart] = useState(toISODate(new Date()));
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const handleSubmit = async () => {
     await updateSettings({
@@ -73,40 +72,24 @@ export default function Onboarding() {
           <Text className="text-sm text-gray-500 font-medium mb-2">Last period start date</Text>
           <TouchableOpacity
             className="border border-pink-border rounded-xl px-4 py-3 bg-white"
-            onPress={() => setShowCalendar(true)}
+            onPress={() => setShowPicker(true)}
           >
-            <Text className={lastPeriodStart ? 'text-gray-800 text-base' : 'text-gray-300 text-base'}>
-              {lastPeriodStart || 'Select date'}
-            </Text>
+            <Text className="text-gray-800 text-base">{lastPeriodStart}</Text>
           </TouchableOpacity>
         </View>
 
-        <Modal visible={showCalendar} transparent animationType="fade">
-          <TouchableOpacity
-            className="flex-1 bg-black/40 justify-center px-6"
-            activeOpacity={1}
-            onPress={() => setShowCalendar(false)}
-          >
-            <View className="bg-white rounded-2xl overflow-hidden">
-              <Calendar
-                current={lastPeriodStart}
-                maxDate={toISODate(new Date())}
-                onDayPress={(day: { dateString: string }) => {
-                  setLastPeriodStart(day.dateString);
-                  setShowCalendar(false);
-                }}
-                markedDates={{
-                  [lastPeriodStart]: { selected: true, selectedColor: '#E91E8C' },
-                }}
-                theme={{
-                  selectedDayBackgroundColor: '#E91E8C',
-                  todayTextColor: '#E91E8C',
-                  arrowColor: '#E91E8C',
-                }}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        {showPicker && (
+          <DateTimePicker
+            value={new Date(lastPeriodStart)}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            maximumDate={new Date()}
+            onChange={(_event, date) => {
+              setShowPicker(Platform.OS === 'ios');
+              if (date) setLastPeriodStart(toISODate(date));
+            }}
+          />
+        )}
 
         <TouchableOpacity
           className="bg-pink-brand rounded-2xl py-5 items-center mt-8 shadow-lg"
