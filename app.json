@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Menstrual Health Tracker",
+    "slug": "menstrual-health-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "menstrualtracker",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF0F5"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yourname.menstrualtracker"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF0F5"
+      },
+      "package": "com.yourname.menstrualtracker"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
