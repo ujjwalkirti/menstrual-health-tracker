@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { router } from 'expo-router';
 import { useAppStore } from '../../src/store/useAppStore';
@@ -27,7 +27,6 @@ export default function CalendarScreen() {
   const markedDates = useMemo<MarkedDates>(() => {
     const marks: MarkedDates = {};
 
-    // Logged period days (actual)
     cycles.forEach((cycle) => {
       let d = fromISODate(cycle.startDate);
       const end = fromISODate(cycle.endDate);
@@ -37,12 +36,10 @@ export default function CalendarScreen() {
       }
     });
 
-    // Predictions
     const nextPeriod = calculateNextPeriod(settings.lastPeriodStart, settings.cycleLength);
     const ovulation = calculateOvulation(nextPeriod);
     const fertile = getFertileWindow(ovulation);
 
-    // Predicted period days
     let pd = nextPeriod;
     for (let i = 0; i < settings.periodDuration; i++) {
       const key = toISODate(pd);
@@ -50,7 +47,6 @@ export default function CalendarScreen() {
       pd = addDays(pd, 1);
     }
 
-    // Fertile window
     let fd = fertile.start;
     while (fd <= fertile.end) {
       const key = toISODate(fd);
@@ -58,11 +54,9 @@ export default function CalendarScreen() {
       fd = addDays(fd, 1);
     }
 
-    // Ovulation (drawn after fertile window so it takes priority)
     const ovKey = toISODate(ovulation);
     if (!marks[ovKey]) marks[ovKey] = { selected: true, selectedColor: '#FFF176' };
 
-    // Daily log dots — overlay on top of existing marks
     logs.forEach((log) => {
       marks[log.date] = {
         ...(marks[log.date] ?? {}),
@@ -75,7 +69,7 @@ export default function CalendarScreen() {
   }, [settings, cycles, logs]);
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-pink-bg">
       <Calendar
         markedDates={markedDates}
         markingType="simple"
@@ -90,9 +84,9 @@ export default function CalendarScreen() {
           textMonthFontWeight: '700',
           textDayHeaderFontWeight: '600',
         }}
-        style={styles.calendar}
+        style={{ borderRadius: 12, margin: 12 }}
       />
-      <View style={styles.legend}>
+      <View className="flex-row flex-wrap px-4 pt-2 gap-3">
         <LegendItem color="#E91E8C" label="Period" />
         <LegendItem color="#FFB6C1" label="Predicted" />
         <LegendItem color="#FFF176" label="Ovulation" />
@@ -104,24 +98,9 @@ export default function CalendarScreen() {
 
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendText}>{label}</Text>
+    <View className="flex-row items-center gap-1.5">
+      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+      <Text className="text-sm text-gray-500">{label}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF0F5' },
-  calendar: { borderRadius: 12, margin: 12 },
-  legend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    gap: 12,
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: { width: 12, height: 12, borderRadius: 6 },
-  legendText: { fontSize: 13, color: '#666' },
-});
