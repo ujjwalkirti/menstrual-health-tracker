@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -68,8 +67,11 @@ export default function LogScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.dateText}>{date}</Text>
+    <ScrollView
+      contentContainerClassName="p-6 bg-pink-bg flex-grow"
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text className="text-lg font-bold text-pink-brand mb-6">{date}</Text>
 
       <Section label="Mood">
         <ChipRow>
@@ -112,7 +114,7 @@ export default function LogScreen() {
 
       <Section label="Notes">
         <TextInput
-          style={styles.notesInput}
+          className="bg-white rounded-xl border border-pink-border px-4 py-3 min-h-[100px] text-base text-gray-800"
           value={notes}
           onChangeText={setNotes}
           multiline
@@ -122,13 +124,17 @@ export default function LogScreen() {
         />
       </Section>
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveText}>Save</Text>
+      <TouchableOpacity
+        className="bg-pink-brand rounded-2xl py-5 items-center mt-8"
+        style={{ shadowColor: '#E91E8C', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 }}
+        onPress={handleSave}
+      >
+        <Text className="text-white text-base font-bold">Save</Text>
       </TouchableOpacity>
 
       {existing && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteText}>Delete Entry</Text>
+        <TouchableOpacity className="items-center mt-4 py-2" onPress={handleDelete}>
+          <Text className="text-red-soft text-sm">Delete Entry</Text>
         </TouchableOpacity>
       )}
     </ScrollView>
@@ -137,73 +143,30 @@ export default function LogScreen() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <View style={sectionStyles.wrapper}>
-      <Text style={sectionStyles.label}>{label}</Text>
+    <View className="mb-2">
+      <Text className="text-sm font-semibold text-gray-500 mt-5 mb-2.5">{label}</Text>
       {children}
     </View>
   );
 }
 
 function ChipRow({ children }: { children: React.ReactNode }) {
-  return <View style={chipStyles.row}>{children}</View>;
+  return <View className="flex-row flex-wrap gap-2">{children}</View>;
 }
 
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity
-      style={[chipStyles.chip, active && chipStyles.chipActive]}
+      className={`px-4 py-2 rounded-full border ${
+        active
+          ? 'bg-pink-brand border-pink-brand'
+          : 'bg-white border-pink-border'
+      }`}
       onPress={onPress}
     >
-      <Text style={[chipStyles.text, active && chipStyles.textActive]}>{label}</Text>
+      <Text className={active ? 'text-white text-sm font-semibold' : 'text-gray-500 text-sm'}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#FFF0F5', flexGrow: 1 },
-  dateText: { fontSize: 18, fontWeight: '700', color: '#E91E8C', marginBottom: 24 },
-  notesInput: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E8D0DC',
-    padding: 14,
-    minHeight: 100,
-    fontSize: 15,
-    color: '#333',
-  },
-  saveButton: {
-    backgroundColor: '#E91E8C',
-    borderRadius: 14,
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 32,
-    shadowColor: '#E91E8C',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  saveText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-  deleteButton: { alignItems: 'center', marginTop: 16, padding: 8 },
-  deleteText: { color: '#E57373', fontSize: 14 },
-});
-
-const sectionStyles = StyleSheet.create({
-  wrapper: { marginBottom: 8 },
-  label: { fontSize: 14, fontWeight: '600', color: '#666', marginBottom: 10, marginTop: 20 },
-});
-
-const chipStyles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E8D0DC',
-    backgroundColor: '#FFF',
-  },
-  chipActive: { backgroundColor: '#E91E8C', borderColor: '#E91E8C' },
-  text: { color: '#666', fontSize: 14 },
-  textActive: { color: '#FFF', fontWeight: '600' },
-});
