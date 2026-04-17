@@ -6,72 +6,124 @@ import {
   calculateNextPeriod,
   getCurrentCycleDay,
   getDaysUntilNextPeriod,
+  getCurrentPhase,
 } from '../../src/utils/prediction';
-import { toISODate, formatDisplay } from '../../src/utils/date';
+import { toISODate, formatShort } from '../../src/utils/date';
+import { useTheme, withOpacity } from '../../src/theme';
+import { CycleRing } from '../../src/components/CycleRing';
 
 export default function Home() {
+  const { colors } = useTheme();
   const settings = useAppStore((s) => s.settings);
 
   const cycleDay = useMemo(
     () => getCurrentCycleDay(settings.lastPeriodStart),
-    [settings.lastPeriodStart]
+    [settings.lastPeriodStart],
   );
 
   const daysUntil = useMemo(
     () => getDaysUntilNextPeriod(settings.lastPeriodStart, settings.cycleLength),
-    [settings.lastPeriodStart, settings.cycleLength]
+    [settings.lastPeriodStart, settings.cycleLength],
   );
 
   const nextPeriodDate = useMemo(
     () => calculateNextPeriod(settings.lastPeriodStart, settings.cycleLength),
-    [settings.lastPeriodStart, settings.cycleLength]
+    [settings.lastPeriodStart, settings.cycleLength],
   );
 
-  const daysUntilLabel = daysUntil <= 0 ? 'Today' : String(daysUntil);
+  const phase = useMemo(
+    () => getCurrentPhase(cycleDay, settings.cycleLength, settings.periodDuration),
+    [cycleDay, settings.cycleLength, settings.periodDuration],
+  );
+
+  const daysUntilLabel = daysUntil <= 0 ? 'Today' : `In ${daysUntil} days`;
 
   return (
-    <View className="flex-1 bg-pink-bg">
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
-        contentContainerClassName="p-6 pb-28"
+        contentContainerStyle={{ padding: 24, paddingBottom: 120, alignItems: 'center' }}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-3xl font-extrabold text-pink-brand mb-7">Your cycle</Text>
-
-        <View
-          className="bg-white rounded-2xl p-6 mb-4"
-          style={{ shadowColor: '#E91E8C', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 }}
-        >
-          <Text className="text-xs text-gray-400 font-medium mb-1">Current cycle day</Text>
-          <Text className="text-4xl font-extrabold text-gray-800">{cycleDay}</Text>
+        {/* Cycle Ring Hero */}
+        <View style={{ marginTop: 16, marginBottom: 32 }}>
+          <CycleRing
+            cycleDay={cycleDay}
+            cycleLength={settings.cycleLength}
+            periodDuration={settings.periodDuration}
+            phase={phase}
+          />
         </View>
 
-        <View
-          className="bg-white rounded-2xl p-6 mb-4"
-          style={{ shadowColor: '#E91E8C', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 }}
-        >
-          <Text className="text-xs text-gray-400 font-medium mb-1">Days until next period</Text>
-          <Text className="text-4xl font-extrabold text-gray-800">{daysUntilLabel}</Text>
+        {/* Stat Pills */}
+        <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+          <StatPill label="Next period" value={daysUntilLabel} colors={colors} />
+          <StatPill
+            label="Expected on"
+            value={formatShort(toISODate(nextPeriodDate))}
+            colors={colors}
+          />
         </View>
 
-        <View
-          className="bg-white rounded-2xl p-6 mb-4"
-          style={{ shadowColor: '#E91E8C', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3 }}
+        {/* Log Today CTA */}
+        <TouchableOpacity
+          onPress={() => router.push(`/log/${toISODate(new Date())}`)}
+          activeOpacity={0.85}
+          style={{
+            marginTop: 24,
+            width: '100%',
+            backgroundColor: colors.brand,
+            borderRadius: 20,
+            paddingVertical: 18,
+            alignItems: 'center',
+            shadowColor: colors.brand,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.4,
+            shadowRadius: 14,
+            elevation: 8,
+          }}
         >
-          <Text className="text-xs text-gray-400 font-medium mb-1">Next period expected</Text>
-          <Text className="text-4xl font-extrabold text-gray-800">
-            {formatDisplay(toISODate(nextPeriodDate))}
-          </Text>
-        </View>
+          <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 16 }}>+ Log Today</Text>
+        </TouchableOpacity>
       </ScrollView>
+    </View>
+  );
+}
 
-      <TouchableOpacity
-        className="absolute bottom-8 right-6 bg-pink-brand rounded-full px-7 py-4"
-        style={{ shadowColor: '#E91E8C', shadowOpacity: 0.45, shadowRadius: 14, elevation: 10 }}
-        onPress={() => router.push(`/log/${toISODate(new Date())}`)}
-        activeOpacity={0.85}
+function StatPill({
+  label,
+  value,
+  colors,
+}: {
+  label: string;
+  value: string;
+  colors: ReturnType<typeof useTheme>['colors'];
+}) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.surface,
+        borderRadius: 16,
+        padding: 16,
+        gap: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: withOpacity(colors.border, 0.5),
+      }}
+    >
+      <Text style={{ fontSize: 11, color: colors.textSecondary, fontWeight: '600' }}>
+        {label.toUpperCase()}
+      </Text>
+      <Text
+        style={{ fontSize: 20, color: colors.textPrimary, fontWeight: '800' }}
+        selectable
       >
-        <Text className="text-white font-extrabold text-base">+ Log Today</Text>
-      </TouchableOpacity>
+        {value}
+      </Text>
     </View>
   );
 }
