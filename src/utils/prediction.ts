@@ -28,3 +28,21 @@ export function getDaysUntilNextPeriod(lastPeriodStart: string, cycleLength: num
   today.setHours(0, 0, 0, 0);
   return diffInDays(today, nextPeriod);
 }
+
+/**
+ * Returns the named phase for a given cycle day.
+ * ovulationDay = cycleLength - 14
+ * fertileWindow = ovulationDay ± 2 (excluding ovulation day itself)
+ */
+export function getCurrentPhase(
+  cycleDay: number,
+  cycleLength: number,
+  periodDuration: number,
+): string {
+  const ovulationDay = cycleLength - 14;
+  if (cycleDay <= periodDuration) return 'Period';
+  if (cycleDay === ovulationDay) return 'Ovulation';
+  if (cycleDay >= ovulationDay - 2 && cycleDay <= ovulationDay + 2) return 'Fertile Window';
+  if (cycleDay < ovulationDay - 2) return 'Follicular';
+  return 'Luteal';
+}
