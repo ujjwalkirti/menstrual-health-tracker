@@ -1,38 +1,22 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-
-function tabIcon(name: IoniconsName) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Ionicons name={name} size={size} color={color} />
-  );
-}
+import { FloatingTabBar } from '../../src/components/FloatingTabBar';
+import { useTheme } from '../../src/theme';
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: '#E91E8C',
-        tabBarInactiveTintColor: '#BBB',
-        tabBarStyle: { backgroundColor: '#FFF', borderTopColor: '#F0E0E8' },
-        headerStyle: { backgroundColor: '#FFF0F5' },
-        headerTintColor: '#E91E8C',
-        headerTitleStyle: { fontWeight: '700' },
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.brand,
+        headerTitleStyle: { color: colors.textPrimary, fontWeight: '700' },
+        tabBarStyle: { display: 'none' },
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{ title: 'Home', tabBarIcon: tabIcon('home') }}
-      />
-      <Tabs.Screen
-        name="calendar"
-        options={{ title: 'Calendar', tabBarIcon: tabIcon('calendar') }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{ title: 'Settings', tabBarIcon: tabIcon('settings') }}
-      />
+      <Tabs.Screen name="home"     options={{ title: 'Home' }} />
+      <Tabs.Screen name="calendar" options={{ title: 'Calendar' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>
   );
 }
