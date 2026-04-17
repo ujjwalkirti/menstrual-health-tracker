@@ -24,11 +24,36 @@ export function diffInDays(a: Date, b: Date): number {
   return Math.round((bUTC - aUTC) / MS_PER_DAY);
 }
 
-export function formatDisplay(dateStr: string): string {
-  const date = fromISODate(dateStr);
-  return date.toLocaleDateString('en-US', {
+/** "Mar 15" */
+export function formatShort(dateStr: string): string {
+  return fromISODate(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/** "March 15, 2024" */
+export function formatFull(dateStr: string): string {
+  return fromISODate(dateStr).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/** "Friday, March 15" */
+export function formatHeader(dateStr: string): string {
+  return fromISODate(dateStr).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+/** "March 2024" */
+export function formatMonthYear(dateStr: string): string {
+  return fromISODate(dateStr).toLocaleDateString('en-US', {
+    month: 'long',
     year: 'numeric',
   });
 }
