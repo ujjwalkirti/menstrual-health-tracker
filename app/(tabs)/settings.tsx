@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAppStore } from '../../src/store/useAppStore';
+import { useTheme, withOpacity } from '../../src/theme';
+import type { ThemePreference } from '../../src/theme';
 import {
   requestNotificationPermissions,
   schedulePeriodReminder,
@@ -18,7 +20,14 @@ import {
 } from '../../src/utils/notifications';
 import { calculateNextPeriod } from '../../src/utils/prediction';
 
+const THEME_OPTIONS: { label: string; value: ThemePreference }[] = [
+  { label: 'Light',  value: 'light' },
+  { label: 'System', value: 'system' },
+  { label: 'Dark',   value: 'dark' },
+];
+
 export default function Settings() {
+  const { colors, preference, setPreference } = useTheme();
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const resetAll = useAppStore((s) => s.resetAll);
@@ -51,39 +60,93 @@ export default function Settings() {
         {
           text: 'Reset',
           style: 'destructive',
-          onPress: async () => {
-            await resetAll();
-            router.replace('/onboarding');
-          },
+          onPress: async () => { await resetAll(); router.replace('/onboarding'); },
         },
-      ]
+      ],
     );
   };
 
+  const inputStyle = {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: colors.textPrimary,
+  };
+
+  const labelStyle = {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '600' as const,
+    marginBottom: 8,
+  };
+
   return (
-    <ScrollView contentContainerClassName="p-6 bg-pink-bg flex-grow">
-      <View className="mb-6">
-        <Text className="text-sm text-gray-500 font-medium mb-2">Cycle length (days)</Text>
-        <TextInput
-          className="border border-pink-border rounded-xl px-4 py-3 text-base bg-white text-gray-800"
-          value={cycleLength}
-          onChangeText={setCycleLength}
-          keyboardType="number-pad"
-        />
+    <ScrollView
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
+    >
+      {/* Appearance */}
+      <SectionHeader label="Appearance" colors={colors} />
+      <View
+        style={{
+          flexDirection: 'row',
+          backgroundColor: colors.surface,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 4,
+          marginBottom: 28,
+        }}
+      >
+        {THEME_OPTIONS.map(({ label, value }) => {
+          const active = preference === value;
+          return (
+            <TouchableOpacity
+              key={value}
+              onPress={() => setPreference(value)}
+              activeOpacity={0.7}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                alignItems: 'center',
+                borderRadius: 10,
+                backgroundColor: active ? colors.brand : 'transparent',
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#FFF' : colors.textSecondary }}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      <View className="mb-6">
-        <Text className="text-sm text-gray-500 font-medium mb-2">Period duration (days)</Text>
-        <TextInput
-          className="border border-pink-border rounded-xl px-4 py-3 text-base bg-white text-gray-800"
-          value={periodDuration}
-          onChangeText={setPeriodDuration}
-          keyboardType="number-pad"
-        />
-      </View>
+      {/* Cycle Settings */}
+      <SectionHeader label="Cycle Settings" colors={colors} />
 
-      <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-sm text-gray-500 font-medium">Notifications</Text>
+      <Text style={labelStyle}>Cycle length (days)</Text>
+      <TextInput
+        style={{ ...inputStyle, marginBottom: 20 }}
+        value={cycleLength}
+        onChangeText={setCycleLength}
+        keyboardType="number-pad"
+      />
+
+      <Text style={labelStyle}>Period duration (days)</Text>
+      <TextInput
+        style={{ ...inputStyle, marginBottom: 20 }}
+        value={periodDuration}
+        onChangeText={setPeriodDuration}
+        keyboardType="number-pad"
+      />
+
+      {/* Notifications */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <Text style={{ fontSize: 15, color: colors.textPrimary, fontWeight: '500' }}>Notifications</Text>
         <Switch
           value={notificationsEnabled}
           onValueChange={async (value) => {
@@ -101,24 +164,49 @@ export default function Settings() {
             }
             setNotificationsEnabled(value);
           }}
-          trackColor={{ false: '#DDD', true: '#E91E8C' }}
+          trackColor={{ false: colors.border, true: colors.brand }}
           thumbColor="#FFF"
         />
       </View>
 
       <TouchableOpacity
-        className="bg-pink-brand rounded-2xl py-5 items-center"
-        style={{ shadowColor: '#E91E8C', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 }}
         onPress={handleSave}
+        activeOpacity={0.85}
+        style={{
+          backgroundColor: colors.brand,
+          borderRadius: 20,
+          paddingVertical: 18,
+          alignItems: 'center',
+          marginBottom: 28,
+          shadowColor: colors.brand,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.35,
+          shadowRadius: 14,
+          elevation: 8,
+        }}
       >
-        <Text className="text-white text-base font-bold">Save Changes</Text>
+        <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 16 }}>Save Changes</Text>
       </TouchableOpacity>
 
-      <View className="h-px bg-pink-divider my-7" />
+      <View style={{ height: 1, backgroundColor: withOpacity(colors.border, 0.8), marginBottom: 24 }} />
 
-      <TouchableOpacity className="items-center py-2" onPress={handleReset}>
-        <Text className="text-red-soft text-sm font-medium">Reset All Data</Text>
+      <TouchableOpacity onPress={handleReset} style={{ alignItems: 'center', paddingVertical: 8 }}>
+        <Text style={{ color: '#E57373', fontSize: 14, fontWeight: '500' }}>Reset All Data</Text>
       </TouchableOpacity>
     </ScrollView>
+  );
+}
+
+function SectionHeader({
+  label,
+  colors,
+}: {
+  label: string;
+  colors: ReturnType<typeof useTheme>['colors'];
+}) {
+  return (
+    <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, letterSpacing: 1, marginBottom: 12 }}>
+      {label.toUpperCase()}
+    </Text>
   );
 }
