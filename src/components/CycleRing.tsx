@@ -95,22 +95,31 @@ export function CycleRing({ cycleDay, cycleLength, periodDuration, phase }: Cycl
 
         {/* Progress arc */}
         {progressDeg > 0 && (
-          <Path
-            d={arcPath(0, progressDeg)}
-            stroke={colors.brand}
-            strokeWidth={SW}
-            fill="none"
-            strokeLinecap="round"
-          />
+          <>
+            <Path
+              d={arcPath(0, progressDeg)}
+              stroke={colors.brand}
+              strokeWidth={SW}
+              fill="none"
+              strokeLinecap="round"
+            />
+            {/* Round cap at arc start (0°) */}
+            <Circle
+              cx={polarToXY(0).x}
+              cy={polarToXY(0).y}
+              r={SW / 2}
+              fill={colors.brand}
+            />
+          </>
         )}
 
         {/* DAY label */}
         <SvgText
           x={C}
-          y={C - 12}
+          y={C - 38}
           textAnchor="middle"
           fill={colors.textSecondary}
-          fontSize="11"
+          fontSize="14"
           fontWeight="600"
         >
           DAY
@@ -119,10 +128,10 @@ export function CycleRing({ cycleDay, cycleLength, periodDuration, phase }: Cycl
         {/* Cycle day number */}
         <SvgText
           x={C}
-          y={C + 16}
+          y={C + 10}
           textAnchor="middle"
           fill={colors.textPrimary}
-          fontSize="52"
+          fontSize="48"
           fontWeight="800"
         >
           {cycleDay}
@@ -131,7 +140,7 @@ export function CycleRing({ cycleDay, cycleLength, periodDuration, phase }: Cycl
         {/* Phase label */}
         <SvgText
           x={C}
-          y={C + 38}
+          y={C + 34}
           textAnchor="middle"
           fill={colors.textSecondary}
           fontSize="12"
