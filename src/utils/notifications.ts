@@ -22,7 +22,7 @@ export async function schedulePeriodReminder(nextPeriodDate: Date): Promise<void
         body: 'Your period is expected in 2 days.',
         sound: true,
       },
-      trigger: { date: reminderDate },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: reminderDate },
     });
   }
 }
@@ -35,9 +35,9 @@ export async function scheduleDailyLogReminder(): Promise<void> {
       sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour: 20,
       minute: 0,
-      repeats: true,
     },
   });
 }
