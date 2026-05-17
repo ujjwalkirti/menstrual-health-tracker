@@ -29,6 +29,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       getItem<Cycle[]>(KEYS.CYCLES),
       getItem<DailyLog[]>(KEYS.LOGS),
     ]);
+
     set({
       settings: settings ?? DEFAULT_SETTINGS,
       cycles: cycles ?? [],
@@ -76,10 +77,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   resetAll: async () => {
     await clearAll();
     set({
-      settings: { ...DEFAULT_SETTINGS, lastPeriodStart: new Date().toISOString().split('T')[0] },
+      settings: DEFAULT_SETTINGS,
       cycles: [],
       logs: [],
-      hydrated: false,
+      hydrated: true,
     });
   },
 }));

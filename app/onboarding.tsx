@@ -11,24 +11,25 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { useAppStore } from '../src/store/useAppStore';
-import { toISODate, formatFull } from '../src/utils/date';
+import { toISODate, formatFull, addDays, fromISODate } from '../src/utils/date';
 import { useTheme, withOpacity } from '../src/theme';
 
 export default function Onboarding() {
   const { colors } = useTheme();
   const updateSettings = useAppStore((s) => s.updateSettings);
+  const addCycle = useAppStore((s) => s.addCycle);
   const [cycleLength, setCycleLength] = useState('28');
   const [periodDuration, setPeriodDuration] = useState('5');
   const [lastPeriodStart, setLastPeriodStart] = useState(toISODate(new Date()));
   const [showPicker, setShowPicker] = useState(false);
 
   const handleSubmit = async () => {
-    await updateSettings({
-      cycleLength: parseInt(cycleLength, 10) || 28,
-      periodDuration: parseInt(periodDuration, 10) || 5,
-      lastPeriodStart: lastPeriodStart || toISODate(new Date()),
-      hasOnboarded: true,
-    });
+    const cl = parseInt(cycleLength, 10) || 28;
+    const pd = parseInt(periodDuration, 10) || 5;
+    const startDate = lastPeriodStart || toISODate(new Date());
+    const endDate = toISODate(addDays(fromISODate(startDate), pd - 1));
+    await updateSettings({ cycleLength: cl, periodDuration: pd, lastPeriodStart: startDate, hasOnboarded: true });
+    await addCycle({ id: startDate, startDate, endDate });
     router.replace('/(tabs)/home');
   };
 
