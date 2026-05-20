@@ -13,10 +13,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourname.menstrualtracker"
+      "bundleIdentifier": "com.yourname.menstrualtracker",
+      "icon": "./assets/images/icon.png"
+
     },
     "android": {
+      "icon": "./assets/images/icon.png",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFF0F5"
       },
       "package": "com.yourname.menstrualtracker"
@@ -27,6 +31,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "icon": "./assets/images/icon.png"
   }
 }
