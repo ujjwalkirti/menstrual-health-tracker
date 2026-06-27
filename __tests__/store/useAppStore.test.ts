@@ -34,6 +34,47 @@ describe('startPeriod', () => {
   });
 });
 
+describe('undoStart', () => {
+  it('removes the just-started cycle and restores lastPeriodStart', async () => {
+    const store = useAppStore.getState();
+    await store.startPeriod('2024-01-01');
+    await store.endPeriod('2024-01-05');
+    const beforeSecond = useAppStore.getState().settings.lastPeriodStart;
+    await store.startPeriod('2024-01-29');
+    await store.undoStart();
+    const { cycles, settings } = useAppStore.getState();
+    expect(cycles).toHaveLength(1);
+    expect(cycles[0].startDate).toBe('2024-01-01');
+    expect(settings.lastPeriodStart).toBe(beforeSecond);
+  });
+
+  it('reverses the backfill applied to the previous cycle', async () => {
+    const store = useAppStore.getState();
+    await store.startPeriod('2024-01-01');
+    await store.endPeriod('2024-01-05');
+    await store.startPeriod('2024-01-29'); // backfills cycles[0].cycleLength = 28
+    expect(useAppStore.getState().cycles[0].cycleLength).toBe(28);
+    await store.undoStart();
+    expect(useAppStore.getState().cycles[0].cycleLength).toBeUndefined();
+  });
+
+  it('does nothing when there is no start to undo', async () => {
+    await useAppStore.getState().undoStart();
+    expect(useAppStore.getState().cycles).toHaveLength(0);
+  });
+
+  it('only undoes the most recent start (single level)', async () => {
+    const store = useAppStore.getState();
+    await store.startPeriod('2024-01-01');
+    await store.startPeriod('2024-01-29');
+    await store.undoStart();
+    await store.undoStart(); // second undo is a no-op
+    const cycles = useAppStore.getState().cycles;
+    expect(cycles).toHaveLength(1);
+    expect(cycles[0].startDate).toBe('2024-01-01');
+  });
+});
+
 describe('endPeriod', () => {
   it('sets endDate on the active cycle', async () => {
     const store = useAppStore.getState();

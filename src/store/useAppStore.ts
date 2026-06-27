@@ -9,11 +9,14 @@ interface AppState {
   cycles: Cycle[];
   logs: DailyLog[];
   hydrated: boolean;
+  /** Transient (in-memory) snapshot taken before the last startPeriod, for single-level undo. */
+  lastStartSnapshot: { cycles: Cycle[]; settings: Settings } | null;
   loadFromStorage: () => Promise<void>;
   updateSettings: (partial: Partial<Settings>) => Promise<void>;
   addCycle: (cycle: Cycle) => Promise<void>;
   updateCycle: (cycle: Cycle) => Promise<void>;
   startPeriod: (date: string) => Promise<void>;
+  undoStart: () => Promise<void>;
   endPeriod: (date: string) => Promise<void>;
   addLog: (log: DailyLog) => Promise<void>;
   updateLog: (log: DailyLog) => Promise<void>;
@@ -26,6 +29,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   cycles: [],
   logs: [],
   hydrated: false,
+  lastStartSnapshot: null,
 
   loadFromStorage: async () => {
     const [settings, cycles, logs] = await Promise.all([
@@ -62,6 +66,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   startPeriod: async (date) => {
     const state = get();
+    // Snapshot pre-start state so a mistaken tap can be fully reversed (single level).
+    const snapshot = { cycles: state.cycles, settings: state.settings };
     const effectiveLength = getEffectiveCycleLength(state.cycles, state.settings);
     const predictedStartDate = toISODate(
       calculateNextPeriod(state.settings.lastPeriodStart, effectiveLength),
@@ -86,10 +92,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       predictedStartDate,
     };
 
+    const updatedCycles = [...cycles, newCycle];
     const updatedSettings = { ...state.settings, lastPeriodStart: date };
-    set({ cycles: [...cycles, newCycle], settings: updatedSettings });
-    await setItem(KEYS.CYCLES, [...cycles, newCycle]);
+    set({ cycles: updatedCycles, settings: updatedSettings, lastStartSnapshot: snapshot });
+    await setItem(KEYS.CYCLES, updatedCycles);
     await setItem(KEYS.SETTINGS, updatedSettings);
+  },
+
+  undoStart: async () => {
+    const { lastStartSnapshot } = get();
+    if (!lastStartSnapshot) return;
+    set({
+      cycles: lastStartSnapshot.cycles,
+      settings: lastStartSnapshot.settings,
+      lastStartSnapshot: null,
+    });
+    await setItem(KEYS.CYCLES, lastStartSnapshot.cycles);
+    await setItem(KEYS.SETTINGS, lastStartSnapshot.settings);
   },
 
   endPeriod: async (date) => {
