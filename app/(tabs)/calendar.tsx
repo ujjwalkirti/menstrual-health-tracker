@@ -22,11 +22,13 @@ export default function CalendarScreen() {
 
     // Logged period days
     cycles.forEach((cycle) => {
-      let d = fromISODate(cycle.startDate);
-      const end = fromISODate(cycle.endDate);
-      while (d <= end) {
-        marks[toISODate(d)] = { type: 'period' };
-        d = addDays(d, 1);
+      if (cycle.endDate) {
+        let d = fromISODate(cycle.startDate);
+        const end = fromISODate(cycle.endDate);
+        while (d <= end) {
+          marks[toISODate(d)] = { type: 'period' };
+          d = addDays(d, 1);
+        }
       }
     });
 

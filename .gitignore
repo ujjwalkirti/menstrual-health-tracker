@@ -25,6 +25,11 @@ expo-env.d.ts
 
 # Claude Code
 .claude/
+.superpowers/
+
+# Superpowers planning docs (specs/plans)
+docs/superpowers/specs/
+docs/superpowers/plans/
 
 # VS Code
 .vscode/

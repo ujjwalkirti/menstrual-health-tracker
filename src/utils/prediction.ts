@@ -1,4 +1,6 @@
 import { addDays, fromISODate, diffInDays } from './date';
+import type { Cycle } from '../models/types';
+import type { Settings } from '../models/types';
 
 export function calculateNextPeriod(lastPeriodStart: string, cycleLength: number): Date {
   return addDays(fromISODate(lastPeriodStart), cycleLength);
@@ -45,4 +47,53 @@ export function getCurrentPhase(
   if (cycleDay >= ovulationDay - 2 && cycleDay <= ovulationDay + 2) return 'Fertile Window';
   if (cycleDay < ovulationDay - 2) return 'Follicular';
   return 'Luteal';
+}
+
+export function getActiveCycle(cycles: Cycle[]): Cycle | null {
+  const open = cycles.filter((c) => !c.endDate);
+  if (open.length === 0) return null;
+  return open.reduce((latest, c) =>
+    c.startDate > latest.startDate ? c : latest,
+  );
+}
+
+const MIN_CYCLES_FOR_ADAPTIVE = 3;
+const ROLLING_WINDOW = 6;
+
+function average(values: number[]): number {
+  const sum = values.reduce((a, b) => a + b, 0);
+  return Math.round(sum / values.length);
+}
+
+export function getEffectiveCycleLength(cycles: Cycle[], settings: Settings): number {
+  const lengths = cycles
+    .filter((c) => typeof c.cycleLength === 'number')
+    .map((c) => c.cycleLength as number);
+  if (lengths.length < MIN_CYCLES_FOR_ADAPTIVE) return settings.cycleLength;
+  return average(lengths.slice(-ROLLING_WINDOW));
+}
+
+export function getEffectivePeriodDuration(cycles: Cycle[], settings: Settings): number {
+  const durations = cycles
+    .filter((c) => c.startDate && c.endDate)
+    .map((c) => diffInDays(fromISODate(c.startDate), fromISODate(c.endDate as string)) + 1);
+  if (durations.length < MIN_CYCLES_FOR_ADAPTIVE) return settings.periodDuration;
+  return average(durations.slice(-ROLLING_WINDOW));
+}
+
+export type CycleTone = 'normal' | 'short' | 'long' | 'flagged';
+
+export function classifyCycle(
+  actual: number,
+  effective: number,
+  kind: 'length' | 'duration' = 'length',
+): { delta: number; tone: CycleTone } {
+  const delta = actual - effective;
+  const flagged =
+    kind === 'length'
+      ? actual < 21 || actual > 35
+      : actual < 2 || actual > 8;
+  if (flagged) return { delta, tone: 'flagged' };
+  if (Math.abs(delta) <= 1) return { delta, tone: 'normal' };
+  return { delta, tone: delta < 0 ? 'short' : 'long' };
 }

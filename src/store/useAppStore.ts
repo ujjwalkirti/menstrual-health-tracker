@@ -1,16 +1,23 @@
 import { create } from 'zustand';
 import { Settings, Cycle, DailyLog, DEFAULT_SETTINGS } from '../models/types';
 import { getItem, setItem, clearAll, KEYS } from '../utils/storage';
+import { getActiveCycle, calculateNextPeriod, getEffectiveCycleLength } from '../utils/prediction';
+import { toISODate, fromISODate, diffInDays } from '../utils/date';
 
 interface AppState {
   settings: Settings;
   cycles: Cycle[];
   logs: DailyLog[];
   hydrated: boolean;
+  /** Transient (in-memory) snapshot taken before the last startPeriod, for single-level undo. */
+  lastStartSnapshot: { cycles: Cycle[]; settings: Settings } | null;
   loadFromStorage: () => Promise<void>;
   updateSettings: (partial: Partial<Settings>) => Promise<void>;
   addCycle: (cycle: Cycle) => Promise<void>;
   updateCycle: (cycle: Cycle) => Promise<void>;
+  startPeriod: (date: string) => Promise<void>;
+  undoStart: () => Promise<void>;
+  endPeriod: (date: string) => Promise<void>;
   addLog: (log: DailyLog) => Promise<void>;
   updateLog: (log: DailyLog) => Promise<void>;
   deleteLog: (id: string) => Promise<void>;
@@ -22,6 +29,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   cycles: [],
   logs: [],
   hydrated: false,
+  lastStartSnapshot: null,
 
   loadFromStorage: async () => {
     const [settings, cycles, logs] = await Promise.all([
@@ -29,6 +37,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       getItem<Cycle[]>(KEYS.CYCLES),
       getItem<DailyLog[]>(KEYS.LOGS),
     ]);
+
     set({
       settings: settings ?? DEFAULT_SETTINGS,
       cycles: cycles ?? [],
@@ -55,6 +64,64 @@ export const useAppStore = create<AppState>((set, get) => ({
     await setItem(KEYS.CYCLES, cycles);
   },
 
+  startPeriod: async (date) => {
+    const state = get();
+    // Snapshot pre-start state so a mistaken tap can be fully reversed (single level).
+    const snapshot = { cycles: state.cycles, settings: state.settings };
+    const effectiveLength = getEffectiveCycleLength(state.cycles, state.settings);
+    const predictedStartDate = toISODate(
+      calculateNextPeriod(state.settings.lastPeriodStart, effectiveLength),
+    );
+
+    // Backfill the most recent prior cycle's start-to-start length.
+    const cycles = state.cycles.map((c) => {
+      const isLatestPrior =
+        c.cycleLength === undefined &&
+        c.startDate < date &&
+        !state.cycles.some((o) => o.startDate > c.startDate && o.startDate < date);
+      if (!isLatestPrior) return c;
+      return {
+        ...c,
+        cycleLength: diffInDays(fromISODate(c.startDate), fromISODate(date)),
+      };
+    });
+
+    const newCycle = {
+      id: `${date}-${Date.now()}`,
+      startDate: date,
+      predictedStartDate,
+    };
+
+    const updatedCycles = [...cycles, newCycle];
+    const updatedSettings = { ...state.settings, lastPeriodStart: date };
+    set({ cycles: updatedCycles, settings: updatedSettings, lastStartSnapshot: snapshot });
+    await setItem(KEYS.CYCLES, updatedCycles);
+    await setItem(KEYS.SETTINGS, updatedSettings);
+  },
+
+  undoStart: async () => {
+    const { lastStartSnapshot } = get();
+    if (!lastStartSnapshot) return;
+    set({
+      cycles: lastStartSnapshot.cycles,
+      settings: lastStartSnapshot.settings,
+      lastStartSnapshot: null,
+    });
+    await setItem(KEYS.CYCLES, lastStartSnapshot.cycles);
+    await setItem(KEYS.SETTINGS, lastStartSnapshot.settings);
+  },
+
+  endPeriod: async (date) => {
+    const state = get();
+    const active = getActiveCycle(state.cycles);
+    if (!active) return;
+    const cycles = state.cycles.map((c) =>
+      c.id === active.id ? { ...c, endDate: date } : c,
+    );
+    set({ cycles });
+    await setItem(KEYS.CYCLES, cycles);
+  },
+
   addLog: async (log) => {
     const logs = [...get().logs, log];
     set({ logs });
@@ -76,10 +143,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   resetAll: async () => {
     await clearAll();
     set({
-      settings: { ...DEFAULT_SETTINGS, lastPeriodStart: new Date().toISOString().split('T')[0] },
+      settings: DEFAULT_SETTINGS,
       cycles: [],
       logs: [],
-      hydrated: false,
+      hydrated: true,
     });
   },
 }));
