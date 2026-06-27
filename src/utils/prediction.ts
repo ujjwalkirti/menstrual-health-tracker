@@ -1,4 +1,5 @@
 import { addDays, fromISODate, diffInDays } from './date';
+import type { Cycle } from '../models/types';
 
 export function calculateNextPeriod(lastPeriodStart: string, cycleLength: number): Date {
   return addDays(fromISODate(lastPeriodStart), cycleLength);
@@ -45,4 +46,12 @@ export function getCurrentPhase(
   if (cycleDay >= ovulationDay - 2 && cycleDay <= ovulationDay + 2) return 'Fertile Window';
   if (cycleDay < ovulationDay - 2) return 'Follicular';
   return 'Luteal';
+}
+
+export function getActiveCycle(cycles: Cycle[]): Cycle | null {
+  const open = cycles.filter((c) => !c.endDate);
+  if (open.length === 0) return null;
+  return open.reduce((latest, c) =>
+    c.startDate > latest.startDate ? c : latest,
+  );
 }
