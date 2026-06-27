@@ -7,8 +7,10 @@ export type Settings = {
 
 export type Cycle = {
   id: string;
-  startDate: string; // ISO date string
-  endDate: string;   // ISO date string
+  startDate: string;            // actual start (ISO YYYY-MM-DD)
+  endDate?: string;             // actual end — undefined while the period is active
+  predictedStartDate?: string;  // what we predicted, for "N days early/late" messaging
+  cycleLength?: number;         // start-to-start length, set when the NEXT cycle begins
 };
 
 export type DailyLog = {
