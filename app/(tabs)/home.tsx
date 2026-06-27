@@ -7,6 +7,9 @@ import {
   getCurrentCycleDay,
   getDaysUntilNextPeriod,
   getCurrentPhase,
+  getEffectiveCycleLength,
+  getEffectivePeriodDuration,
+  getActiveCycle,
 } from '../../src/utils/prediction';
 import { toISODate, formatShort } from '../../src/utils/date';
 import { useTheme, withOpacity } from '../../src/theme';
@@ -15,6 +18,16 @@ import { CycleRing } from '../../src/components/CycleRing';
 export default function Home() {
   const { colors } = useTheme();
   const settings = useAppStore((s) => s.settings);
+  const cycles = useAppStore((s) => s.cycles);
+
+  const effectiveLength = useMemo(
+    () => getEffectiveCycleLength(cycles, settings),
+    [cycles, settings],
+  );
+  const effectiveDuration = useMemo(
+    () => getEffectivePeriodDuration(cycles, settings),
+    [cycles, settings],
+  );
 
   const cycleDay = useMemo(
     () => getCurrentCycleDay(settings.lastPeriodStart),
@@ -22,18 +35,18 @@ export default function Home() {
   );
 
   const daysUntil = useMemo(
-    () => getDaysUntilNextPeriod(settings.lastPeriodStart, settings.cycleLength),
-    [settings.lastPeriodStart, settings.cycleLength],
+    () => getDaysUntilNextPeriod(settings.lastPeriodStart, effectiveLength),
+    [settings.lastPeriodStart, effectiveLength],
   );
 
   const nextPeriodDate = useMemo(
-    () => calculateNextPeriod(settings.lastPeriodStart, settings.cycleLength),
-    [settings.lastPeriodStart, settings.cycleLength],
+    () => calculateNextPeriod(settings.lastPeriodStart, effectiveLength),
+    [settings.lastPeriodStart, effectiveLength],
   );
 
   const phase = useMemo(
-    () => getCurrentPhase(cycleDay, settings.cycleLength, settings.periodDuration),
-    [cycleDay, settings.cycleLength, settings.periodDuration],
+    () => getCurrentPhase(cycleDay, effectiveLength, effectiveDuration),
+    [cycleDay, effectiveLength, effectiveDuration],
   );
 
   const daysUntilLabel = daysUntil <= 0 ? 'Today' : `In ${daysUntil} days`;
@@ -48,8 +61,8 @@ export default function Home() {
         <View style={{ marginTop: 16, marginBottom: 32 }}>
           <CycleRing
             cycleDay={cycleDay}
-            cycleLength={settings.cycleLength}
-            periodDuration={settings.periodDuration}
+            cycleLength={effectiveLength}
+            periodDuration={effectiveDuration}
             phase={phase}
           />
         </View>
