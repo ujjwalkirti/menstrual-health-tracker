@@ -71,9 +71,11 @@ export default function Home() {
     const prevStart = settings.lastPeriodStart;
     const actual = prevStart ? diffInDaysSafe(prevStart, date) : effectiveLength;
     await startPeriod(date);
-    setCard({ message: buildStartMessage(actual, effectiveLength), tone: classifyCycle(actual, effectiveLength, 'length').tone });
-    if (classifyCycle(actual, effectiveLength, 'length').tone === 'flagged') {
+    const { tone } = classifyCycle(actual, effectiveLength, 'length');
+    if (tone === 'flagged') {
       setFlagCard({ message: buildFlagMessage('length') });
+    } else {
+      setCard({ message: buildStartMessage(actual, effectiveLength), tone });
     }
   };
 
@@ -81,9 +83,11 @@ export default function Home() {
     if (!activeCycle) return;
     const duration = diffInDaysSafe(activeCycle.startDate, date) + 1;
     await endPeriod(date);
-    setCard({ message: buildEndMessage(duration, effectiveDuration), tone: classifyCycle(duration, effectiveDuration, 'duration').tone });
-    if (classifyCycle(duration, effectiveDuration, 'duration').tone === 'flagged') {
+    const { tone } = classifyCycle(duration, effectiveDuration, 'duration');
+    if (tone === 'flagged') {
       setFlagCard({ message: buildFlagMessage('duration') });
+    } else {
+      setCard({ message: buildEndMessage(duration, effectiveDuration), tone });
     }
   };
 
