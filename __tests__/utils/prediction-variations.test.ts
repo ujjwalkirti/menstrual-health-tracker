@@ -92,3 +92,34 @@ describe('getEffectivePeriodDuration', () => {
     expect(getEffectivePeriodDuration(cycles, settings)).toBe(3);
   });
 });
+
+import { classifyCycle } from '../../src/utils/prediction';
+
+describe('classifyCycle', () => {
+  it('returns normal within tolerance', () => {
+    expect(classifyCycle(28, 28)).toEqual({ delta: 0, tone: 'normal' });
+    expect(classifyCycle(29, 28).tone).toBe('normal'); // within ±1
+  });
+
+  it('returns short when actual is meaningfully below effective', () => {
+    expect(classifyCycle(25, 28)).toEqual({ delta: -3, tone: 'short' });
+  });
+
+  it('returns long when actual is meaningfully above effective', () => {
+    expect(classifyCycle(32, 28)).toEqual({ delta: 4, tone: 'long' });
+  });
+
+  it('flags out-of-range cycle lengths', () => {
+    expect(classifyCycle(19, 28).tone).toBe('flagged');
+    expect(classifyCycle(37, 28).tone).toBe('flagged');
+  });
+
+  it('flags out-of-range durations with kind=duration', () => {
+    expect(classifyCycle(1, 5, 'duration').tone).toBe('flagged');
+    expect(classifyCycle(9, 5, 'duration').tone).toBe('flagged');
+  });
+
+  it('does not flag in-range durations', () => {
+    expect(classifyCycle(3, 5, 'duration').tone).toBe('short');
+  });
+});
