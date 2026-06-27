@@ -1,5 +1,6 @@
 import { addDays, fromISODate, diffInDays } from './date';
 import type { Cycle } from '../models/types';
+import type { Settings } from '../models/types';
 
 export function calculateNextPeriod(lastPeriodStart: string, cycleLength: number): Date {
   return addDays(fromISODate(lastPeriodStart), cycleLength);
@@ -54,4 +55,28 @@ export function getActiveCycle(cycles: Cycle[]): Cycle | null {
   return open.reduce((latest, c) =>
     c.startDate > latest.startDate ? c : latest,
   );
+}
+
+const MIN_CYCLES_FOR_ADAPTIVE = 3;
+const ROLLING_WINDOW = 6;
+
+function average(values: number[]): number {
+  const sum = values.reduce((a, b) => a + b, 0);
+  return Math.round(sum / values.length);
+}
+
+export function getEffectiveCycleLength(cycles: Cycle[], settings: Settings): number {
+  const lengths = cycles
+    .filter((c) => typeof c.cycleLength === 'number')
+    .map((c) => c.cycleLength as number);
+  if (lengths.length < MIN_CYCLES_FOR_ADAPTIVE) return settings.cycleLength;
+  return average(lengths.slice(-ROLLING_WINDOW));
+}
+
+export function getEffectivePeriodDuration(cycles: Cycle[], settings: Settings): number {
+  const durations = cycles
+    .filter((c) => c.startDate && c.endDate)
+    .map((c) => diffInDays(fromISODate(c.startDate), fromISODate(c.endDate as string)) + 1);
+  if (durations.length < MIN_CYCLES_FOR_ADAPTIVE) return settings.periodDuration;
+  return average(durations.slice(-ROLLING_WINDOW));
 }
